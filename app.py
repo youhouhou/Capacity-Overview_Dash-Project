@@ -3,7 +3,6 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import pyodbc
-import numpy as np
 import pandas as pd
 import datetime
 from datetime import datetime as dt
@@ -81,6 +80,13 @@ def date_offset_back_forward(current_date, offset_day):
 def truncate_date(date):
     return  datetime.date(date.year,date.month,date.day)
 
+# find common product to compare:
+# def find_common_product(Cap_master,compare_list):
+#     for i in compare_list:
+#         for product,process in Cap_master[i].items():
+
+
+
 # need functin to loop through Cap_master to grab all unique manufacturing process
 
 # function for graph: generate data for cap Overview bar plot
@@ -93,19 +99,18 @@ def generate_cap_overview(dff,dff_holiday,start_date,end_date,data,holiday,facto
         product_type['y'] = capacities
         product_type['type'] = 'bar'
         product_type['name'] = k
+        product_type['marker'] = {'font':{'size':20}}
         graph_data.append(product_type)
     return {
             'data': graph_data,
             'layout': {
-                    'xaxis':{'title':'Time'},
-                    'yaxis':{'title':'Capacity(%)'},
+                    'xaxis':{'title':'Time','titlefont':{'size':22},'tickfont':{'size':20}},
+                    'yaxis':{'title':'Capacity(%)','titlefont':{'size':22},'tickfont':{'size':20}},
                     'title': '',
                     'height':700,
                     'plot_bgcolor': colors['background'],
                     'paper_bgcolor': colors['background'],
-                    'font': {
-                        'color': colors['text']
-                    }
+                    'legend':{'font':{'size':20}}
                 }
             }
 
@@ -127,7 +132,7 @@ Cap_master = {'Duarte':{
              'SWD':{228:-1,221:-2,225:-1},'Arch(NT)':{240:-4},'Arch(WT)':{240:-6}
              },
              'MVC':{
-              'Window':{320:-3,325:-2},'SLD':{321:-3,325:-2,328:-2},
+              'Window':{320:-3,325:-2},'CM':{320:-3,325:-3,326:-2},'SLD':{321:-3,325:-2,328:-2},
               'SWD':{328:-2,321:-3,325:-2},'Arch(NT)':{340:-5},'Arch(WT)':{340:-7}
              },
              'EuroTek':{},
@@ -150,7 +155,7 @@ conn = pyodbc.connect(
 query = """select KB.datum, KB.kapaid, sum(kapawert) / nullif(SOLLKAPA,0)
         from KAPABUCH kb
         left join kapasoll ks on ks.datum = kb.datum and ks.kapaid = kb.kapaid
-        where KB.kapaid in (220,225,226,221,228,240,320,325,321,328,340,420,421,422,423)
+        where KB.kapaid in (220,225,226,221,228,240,320,325,326,321,328,340,420,421,422,423)
         group by KB.datum, KB.kapaid, SOLLKAPA
         order by KB.datum, KB.kapaid, SOLLKAPA"""
 
@@ -184,17 +189,17 @@ vertical = True
 app.scripts.config.serve_locally = True
 app.layout = html.Div(style = {'backgroundColor': colors['background']},
     children=[
-    html.H1(children='Capacity',
+    html.H1(children='Factory Capacity Overview',
             style={
             'textAlign': 'center',
-            'color': colors['text']}),
+            'font-size': '2.65em'}),
 
     html.Div(children='''
         Show Cpacity By Bar Chart.
         ''',
         style={
         'textAlign': 'center',
-        'color': colors['text']}),
+        'font-size': '1.5em'}),
 
     html.Div(
         dcc.Tabs(
@@ -211,7 +216,7 @@ app.layout = html.Div(style = {'backgroundColor': colors['background']},
                 'textAlign': 'left'
             }
         ),
-        style={'width': '20%', 'float': 'left'}
+        style={'width': '10%', 'float': 'left'}
     ),
 
     html.Div( id = 'main_display',
@@ -220,7 +225,6 @@ app.layout = html.Div(style = {'backgroundColor': colors['background']},
             html.Div( id = 'components_overview',
                 children = [
                     html.Div([
-
                             html.Div(
                              style = {'width': '65%', 'display': 'inline-block'}
                             ),
@@ -248,7 +252,7 @@ app.layout = html.Div(style = {'backgroundColor': colors['background']},
                                 {'label': 'MVC', 'value': 'MVC'},
                                 {'label': 'Sonax', 'value': 'Sonax'}
                                 ],
-                            value='Duarte')
+                            value='Duarte',style = {'font-size':'1em'})
 
                         ], style = {'width': '30%', 'float': 'right', 'display': 'inline-block'})],
                         style = {'padding': '20px 0px 30px 0px'}
@@ -258,19 +262,19 @@ app.layout = html.Div(style = {'backgroundColor': colors['background']},
             html.Div(id = 'components_comparation',
                     children = [
                                 html.Div(
-                                    [html.Div(
-                                        style = {'width': '65%', 'display': 'inline-block'}
-                                    ),
-                                    html.Div(
-                                        dcc.Dropdown(
-                                            options=[
-                                                {'label': 'Duarte', 'value': 'Duarte'},
-                                                {'label': 'MVC', 'value': 'MVC'}
-                                            ],
-                                            value=['Duarte', 'MVC'],
-                                            multi=True
-                                        ), style = {'width': '30%', 'float': 'right', 'display': 'inline-block'}
-                                    )],style = {'padding': '20px 0px 30px 0px'}
+                                        [html.Div(
+                                            style = {'width': '65%', 'display': 'inline-block'}
+                                        ),
+                                        html.Div(
+                                            dcc.Dropdown(
+                                                options=[
+                                                    {'label': 'Duarte', 'value': 'Duarte'},
+                                                    {'label': 'MVC', 'value': 'MVC'}
+                                                ],
+                                                value=['Duarte', 'MVC'],
+                                                multi=True
+                                            ), style = {'width': '30%', 'float': 'right', 'display': 'inline-block'}
+                                        )],style = {'padding': '20px 0px 30px 0px'}
                                 )
                             ],style = {'display': 'none'}
             ),
@@ -298,7 +302,7 @@ app.layout = html.Div(style = {'backgroundColor': colors['background']},
             # ], style = {'padding': '20px 0px 0px 0px'}),
             dcc.Graph(id='Cpacity_Bar')
         ],
-        style={'width': '80%', 'float': 'right'}),
+        style={'width': '90%', 'float': 'right'}),
 
     dcc.Interval(
         id='interval-component',
@@ -336,30 +340,6 @@ def update_data():
 def update_graph(start_date,end_date,data,holiday,factory,tab_value):
     dff = pd.read_json(data)
     dff_holiday = pd.read_json(holiday)
-    # graph_data = []
-    # for k,v in Cap_master[factory].items():
-    #     product_type = {}
-    #     times , capacities = calculate_cap(dff,v,start_date,end_date,site_number[factory],dff_holiday)
-    #     product_type['x'] = times
-    #     product_type['y'] = capacities
-    #     product_type['type'] = 'bar'
-    #     product_type['name'] = k
-    #     graph_data.append(product_type)
-    # return {
-    #     'data': graph_data,
-    #     'layout': {
-    #             'xaxis':{'title':'Time'},
-    #             'yaxis':{'title':'Capacity(%)'},
-    #             'title': '',
-    #             'height':700,
-    #             'plot_bgcolor': colors['background'],
-    #             'paper_bgcolor': colors['background'],
-    #             'font': {
-    #                 'color': colors['text']
-    #             },
-    #             'legend': {'x': 0, 'y': 1}
-    #         }
-    #     }
     if tab_value == 1:
         return generate_cap_overview(dff,dff_holiday,start_date,end_date,data,holiday,factory)
     elif tab_value == 2:

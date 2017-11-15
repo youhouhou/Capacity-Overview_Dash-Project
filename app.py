@@ -255,6 +255,26 @@ app.layout = html.Div(style = {'backgroundColor': colors['background']},
                     )
                 ], style = {'display': 'block'}),
 
+            html.Div(id = 'components_comparation',
+                    children = [
+                                html.Div(
+                                    [html.Div(
+                                        style = {'width': '65%', 'display': 'inline-block'}
+                                    ),
+                                    html.Div(
+                                        dcc.Dropdown(
+                                            options=[
+                                                {'label': 'Duarte', 'value': 'Duarte'},
+                                                {'label': 'MVC', 'value': 'MVC'}
+                                            ],
+                                            value=['Duarte', 'MVC'],
+                                            multi=True
+                                        ), style = {'width': '30%', 'float': 'right', 'display': 'inline-block'}
+                                    )],style = {'padding': '20px 0px 30px 0px'}
+                                )
+                            ],style = {'display': 'none'}
+            ),
+
             # html.Div([
             #         dcc.DatePickerRange(
             #         id='date-picker-range',
@@ -355,7 +375,15 @@ def diplay_component_overview(value):
     elif value == 2:
         return {'display': 'none'}
 
-
+@app.callback(
+    Output('components_comparation','style'),
+    [Input('tabs','value')]
+    )
+def diplay_component_overview(value):
+    if value == 2:
+        return {'display': 'block'}
+    elif value == 1:
+        return {'display': 'none'}
 
 if __name__ == '__main__':
     app.run_server(debug=True)

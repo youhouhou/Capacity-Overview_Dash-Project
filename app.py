@@ -137,11 +137,11 @@ future_day_count = date_future.timetuple().tm_yday
 site_number = {'Duarte':2,'MVC':3,'EuroTek':7,'Sonax':4}
 Cap_master = {'Duarte':{
              'Window':{220:-2,225:-1},'CM':{226:-1},'SLD':{221:-2,228:-1},
-             'SWD':{228:-1},'Arch(NT)':{240:-4},'Arch(WT)':{240:-6}
+             'SWD':{227:-1},'Arch(NT)':{240:-4},'Arch(WT)':{240:-6}
              },
              'MVC':{
               'Window':{320:-3,325:-2},'CM':{326:-2},'SLD':{321:-3,328:-2},
-              'SWD':{328:-2},'Arch(NT)':{340:-5},'Arch(WT)':{340:-7}
+              'SWD':{327:-2},'Arch(NT)':{340:-5},'Arch(WT)':{340:-7}
              },
              'EuroTek':{},
              'Sonax':{
@@ -163,7 +163,7 @@ conn = pyodbc.connect(
 query = """select KB.datum, KB.kapaid, sum(kapawert) / nullif(SOLLKAPA,0)
         from KAPABUCH kb
         left join kapasoll ks on ks.datum = kb.datum and ks.kapaid = kb.kapaid
-        where KB.kapaid in (220,225,226,221,228,240,320,325,326,321,328,340,420,421,422,423)
+        where KB.kapaid in (220,225,226,221,227,228,240,320,325,326,321,327,328,340,420,421,422,423)
         group by KB.datum, KB.kapaid, SOLLKAPA
         order by KB.datum, KB.kapaid, SOLLKAPA"""
 
@@ -267,9 +267,23 @@ app.layout = html.Div(style = {'backgroundColor': colors['background']},
                         style = {'padding': '20px 0px 30px 0px'}
                     )
                 ], style = {'display': 'block'}),
-
+            # component for cap comparation
             html.Div(id = 'components_comparation',
                     children = [
+
+                                html.Div(
+                                    [html.Div(
+                                        style = {'width': '65%', 'display': 'inline-block'}
+                                        ),
+                                        html.Div(
+                                            dcc.DatePickerSingle(
+                                                id='my-date-picker-single',
+                                                min_date_allowed=dt(2015, 1, 1),
+                                                initial_visible_month=datetime.date(dt.now().year,dt.now().month,dt.now().day),
+                                                date=datetime.date(dt.now().year,dt.now().month,dt.now().day)
+                                            ), style = {'width': '30%', 'float': 'right', 'display': 'inline-block'}
+                                        )] ),
+
                                 html.Div(
                                         [html.Div(
                                             style = {'width': '65%', 'display': 'inline-block'}

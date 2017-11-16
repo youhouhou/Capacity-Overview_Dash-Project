@@ -81,11 +81,14 @@ def truncate_date(date):
     return  datetime.date(date.year,date.month,date.day)
 
 # find common product to compare:
-# def find_common_product(Cap_master,compare_list):
-#     for i in compare_list:
-#         for product,process in Cap_master[i].items():
-
-
+def find_common_product(Cap_master,compare_list):
+    total_list = []
+    for i in compare_list:
+        products_i = [k for k,v in Cap_master[i].items()]
+        total_list += products_i
+    count_dic = {i:total_list.count(i) for i in total_list}
+    commmon_product = [k for k,v in count_dic.items() if v==len(compare_list) ]
+    return commmon_product
 
 # need functin to loop through Cap_master to grab all unique manufacturing process
 
@@ -115,6 +118,11 @@ def generate_cap_overview(dff,dff_holiday,start_date,end_date,data,holiday,facto
             }
 
 
+
+
+
+
+
 ### define globle variable ###
 date_now = dt.now()
 this_year = date_now.year
@@ -128,12 +136,12 @@ future_day_count = date_future.timetuple().tm_yday
 
 site_number = {'Duarte':2,'MVC':3,'EuroTek':7,'Sonax':4}
 Cap_master = {'Duarte':{
-             'Window':{220:-2,225:-1},'CM':{220:-2,225:-2,226:-1},'SLD':{221:-2,225:-1,228:-1},
-             'SWD':{228:-1,221:-2,225:-1},'Arch(NT)':{240:-4},'Arch(WT)':{240:-6}
+             'Window':{220:-2,225:-1},'CM':{226:-1},'SLD':{221:-2,228:-1},
+             'SWD':{228:-1},'Arch(NT)':{240:-4},'Arch(WT)':{240:-6}
              },
              'MVC':{
-              'Window':{320:-3,325:-2},'CM':{320:-3,325:-3,326:-2},'SLD':{321:-3,325:-2,328:-2},
-              'SWD':{328:-2,321:-3,325:-2},'Arch(NT)':{340:-5},'Arch(WT)':{340:-7}
+              'Window':{320:-3,325:-2},'CM':{326:-2},'SLD':{321:-3,328:-2},
+              'SWD':{328:-2},'Arch(NT)':{340:-5},'Arch(WT)':{340:-7}
              },
              'EuroTek':{},
              'Sonax':{
@@ -201,6 +209,7 @@ app.layout = html.Div(style = {'backgroundColor': colors['background']},
         'textAlign': 'center',
         'font-size': '1.5em'}),
 
+# tab on the left
     html.Div(
         dcc.Tabs(
             tabs=[
@@ -218,7 +227,7 @@ app.layout = html.Div(style = {'backgroundColor': colors['background']},
         ),
         style={'width': '10%', 'float': 'left'}
     ),
-
+# main display on the right
     html.Div( id = 'main_display',
         children = [
             # component for cap Overview bar plot

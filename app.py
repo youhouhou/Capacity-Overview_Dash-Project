@@ -80,7 +80,8 @@ def date_offset_back_forward(current_date, offset_day):
 def truncate_date(date):
     return  datetime.date(date.year,date.month,date.day)
 
-# find common product to compare:
+# find common product to compare their compacity
+# param: compare_list: list of factory that need to compare Capacity
 def find_common_product(Cap_master,compare_list):
     total_list = []
     for i in compare_list:
@@ -93,7 +94,7 @@ def find_common_product(Cap_master,compare_list):
 # need functin to loop through Cap_master to grab all unique manufacturing process
 
 # function for graph: generate data for cap Overview bar plot
-def generate_cap_overview(dff,dff_holiday,start_date,end_date,data,holiday,factory):
+def generate_cap_overview(dff,dff_holiday,start_date,end_date,factory):
     graph_data = []
     for k,v in Cap_master[factory].items():
         product_type = {}
@@ -102,7 +103,6 @@ def generate_cap_overview(dff,dff_holiday,start_date,end_date,data,holiday,facto
         product_type['y'] = capacities
         product_type['type'] = 'bar'
         product_type['name'] = k
-        product_type['marker'] = {'font':{'size':20}}
         graph_data.append(product_type)
     return {
             'data': graph_data,
@@ -117,8 +117,36 @@ def generate_cap_overview(dff,dff_holiday,start_date,end_date,data,holiday,facto
                 }
             }
 
-
-
+# generate data for cap comparation bar plot
+def generate_cap_comparation(dff,dff_holiday,date,factory_list):
+    product_list = find_common_product(Cap_master,factory_list)
+    graph_data = []
+    for factory in factory_list:
+        factory_data = {}
+        capacity_list = []
+        for product in product_list:
+            time , capacities = calculate_cap(dff,Cap_master[factory][product],date,date,site_number[factory],dff_holiday)
+            if len(capacities)>0:
+                capacity_list.append(capacities[0])
+        factory_data['x'] = product_list
+        print('product list', product_list)
+        factory_data['y'] = capacity_list
+        print('capacity list', capacity_list)
+        factory_data['type'] = 'bar'
+        factory_data['name'] = factory
+        graph_data.append(factory_data)
+    return {
+            'data': graph_data,
+            'layout': {
+                    'xaxis':{'title':'Product Type','titlefont':{'size':22},'tickfont':{'size':20}},
+                    'yaxis':{'title':'Capacity(%)','titlefont':{'size':22},'tickfont':{'size':20}},
+                    'title': '',
+                    'height':700,
+                    'plot_bgcolor': colors['background'],
+                    'paper_bgcolor': colors['background'],
+                    'legend':{'font':{'size':20}}
+                }
+        }
 
 
 
@@ -270,14 +298,13 @@ app.layout = html.Div(style = {'backgroundColor': colors['background']},
             # component for cap comparation
             html.Div(id = 'components_comparation',
                     children = [
-
                                 html.Div(
                                     [html.Div(
                                         style = {'width': '65%', 'display': 'inline-block'}
                                         ),
                                         html.Div(
                                             dcc.DatePickerSingle(
-                                                id='my-date-picker-single',
+                                                id='single_date_picker',
                                                 min_date_allowed=dt(2015, 1, 1),
                                                 initial_visible_month=datetime.date(dt.now().year,dt.now().month,dt.now().day),
                                                 date=datetime.date(dt.now().year,dt.now().month,dt.now().day)
@@ -290,6 +317,7 @@ app.layout = html.Div(style = {'backgroundColor': colors['background']},
                                         ),
                                         html.Div(
                                             dcc.Dropdown(
+                                                id='factory_list',
                                                 options=[
                                                     {'label': 'Duarte', 'value': 'Duarte'},
                                                     {'label': 'MVC', 'value': 'MVC'}
@@ -301,28 +329,6 @@ app.layout = html.Div(style = {'backgroundColor': colors['background']},
                                 )
                             ],style = {'display': 'none'}
             ),
-
-            # html.Div([
-            #         dcc.DatePickerRange(
-            #         id='date-picker-range',
-            #         min_date_allowed = dt(2015, 1, 1),
-            #         start_date = datetime.date(dt.now().year,dt.now().month,dt.now().day)+datetime.timedelta(days = 3),
-            #         end_date = datetime.date(dt.now().year,dt.now().month,dt.now().day)+datetime.timedelta(days = 12),
-            #         calendar_orientation='vertical'
-            #         )
-            #     ]),
-            #
-            # html.Div([
-            #     dcc.RadioItems(
-            #     id = 'factory',
-            #     options=[
-            #         {'label': 'Duarte', 'value': 'Duarte'},
-            #         {'label': 'MVC', 'value': 'MVC'},
-            #         {'label': 'Sonax', 'value': 'Sonax'}
-            #         ],
-            #     value='Duarte')
-            #
-            # ], style = {'padding': '20px 0px 0px 0px'}),
             dcc.Graph(id='Cpacity_Bar')
         ],
         style={'width': '90%', 'float': 'right'}),
@@ -358,15 +364,17 @@ def update_data():
      Input('cap_result','children'),
      Input('holiday_result','children'),
      Input('factory','value'),
-     Input('tabs','value')]
+     Input('tabs','value'),
+     Input('single_date_picker','date'),
+     Input('factory_list','value')]
      )
-def update_graph(start_date,end_date,data,holiday,factory,tab_value):
+def update_graph(start_date,end_date,data,holiday,factory,tab_value,single_day,compare_list):
     dff = pd.read_json(data)
     dff_holiday = pd.read_json(holiday)
     if tab_value == 1:
-        return generate_cap_overview(dff,dff_holiday,start_date,end_date,data,holiday,factory)
+        return generate_cap_overview(dff,dff_holiday,start_date,end_date,factory)
     elif tab_value == 2:
-        return {}
+        return generate_cap_comparation(dff,dff_holiday,single_day,compare_list)
 
 @app.callback(
     Output('components_overview','style'),

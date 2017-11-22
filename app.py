@@ -231,7 +231,7 @@ app.layout = html.Div(style = {'backgroundColor': colors['background']},
             'font-size': '2.65em'}),
 
     html.Div(children='''
-        Show Cpacity By Bar Chart.
+        Show Capacity By Bar Chart.
         ''',
         style={
         'textAlign': 'center',
